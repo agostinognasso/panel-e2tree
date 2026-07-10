@@ -20,15 +20,16 @@
 # assets (col 21), and closing year in [2013, 2022]. We read the EUR-denominated
 # financials file so all countries are directly comparable.
 #
-# Usage:
-#   ORBIS_ROOT="/Volumes/Crucial X6/Orbis Univ Dec_Work In Progress" \
-#     bash code/00_extract_orbis.sh
+# Usage: point ORBIS_ROOT at the directory holding your licensed ORBIS .txt
+# exports (the folder that contains Industry_Global_financials_and_ratios/,
+# Legal_info/ and Industry_classifications/), then run:
+#   ORBIS_ROOT="/path/to/orbis_export" bash code/00_extract_orbis.sh
 #
 # Column indices below refer to the Dec-2025 schema (verified against the file
 # headers). If the schema changes, re-check with:  head -1 FILE | tr '\t' '\n' | nl
 set -euo pipefail
 
-ORBIS_ROOT="${ORBIS_ROOT:-/Volumes/Crucial X6/Orbis Univ Dec_Work In Progress}"
+: "${ORBIS_ROOT:?set ORBIS_ROOT to the directory of your licensed ORBIS .txt exports (see usage note above)}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT="$(cd "$HERE/.." && pwd)/data/raw/output"
 mkdir -p "$OUT"
