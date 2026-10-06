@@ -29,6 +29,7 @@ FORCE <- identical(Sys.getenv("REPRO_FORCE"), "1")
 suppressPackageStartupMessages(library(e2tree))
 source(file.path(BASE, "code", "panel_e2tree.R"))
 source(file.path(BASE, "code", "e2tree_split_local.R"))
+source(file.path(BASE, "code", "palette.R"))
 
 step <- function(name, expr) {
   f <- file.path(CACHE, paste0(name, ".rds"))
@@ -442,8 +443,9 @@ put("reduced_within_fid", s10$within_fid, 3)
 # proximity negative-control figure (Fig. shortcuts panel b)
 th0 <- theme_minimal(base_size = 12) + theme(panel.grid.minor = element_blank())
 p_prox <- ggplot(s4$sims, aes(icc_emp, prox_between)) +
-  geom_line(colour = "black", linewidth = .8) + geom_point(size = 2) +
-  geom_abline(slope = 1, intercept = 0, linetype = 2, colour = "grey50") +
+  geom_abline(slope = 1, intercept = 0, linetype = 2, colour = PAL$grid) +
+  geom_line(colour = PAL$teal, linewidth = .9) +
+  geom_point(size = 2.4, colour = PAL$teal_dark) +
   ylim(0, 1) + xlim(0, 1) + th0 +
   labs(x = "true ICC of the outcome", y = "between share of pooled proximity")
 ggsave(file.path(FEN, "proximity_decomp.png"), p_prox, width = 6.4, height = 4.2, dpi = 140)
@@ -486,7 +488,7 @@ p_nec <- ggplot(nec_long, aes(approach, r2, fill = r2 > 0)) +
   geom_col(width = .65) + geom_hline(yintercept = 0, colour = "grey40", linewidth = .3) +
   geom_text(aes(label = sprintf("%.2f", r2), hjust = ifelse(r2 >= 0, -0.15, 1.1)), size = 3.2) +
   coord_flip() + facet_wrap(~metric) +
-  scale_fill_manual(values = c(`TRUE` = "#1b9e77", `FALSE` = "#d95f02"), guide = "none") +
+  scale_fill_manual(values = c(`TRUE` = PAL$teal, `FALSE` = PAL$terracotta), guide = "none") +
   ylim(-0.6, 1) + th +
   labs(x = NULL, y = "honest R² (1 − SSE/SST) vs observed solvency")
 ggsave(file.path(FEN, "e2tree_necessity.png"), p_nec, width = 10, height = 3.8, dpi = 140)

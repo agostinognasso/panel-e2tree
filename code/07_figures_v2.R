@@ -18,6 +18,7 @@ suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(ggplot2
 BASE <- normalizePath(file.path(dirname(sub("^--file=", "",
   grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE))), ".."))
 EN <- file.path(BASE, "manuscript", "manuscript_DSS_v2", "figures")
+source(file.path(BASE, "code", "palette.R"))
 stopifnot(dir.exists(EN))
 
 th <- theme_minimal(base_size = 12) +
@@ -57,11 +58,13 @@ nec_long <- nec2 %>%
                          levels = c("total", "within-unit component")))
 
 p_nec <- ggplot(nec_long, aes(label, r2, fill = r2 > 0)) +
-  geom_col(width = .65, colour = "black", linewidth = .3) +   # bordo: le barre bianche (negative) restano visibili
-  geom_hline(yintercept = 0, colour = "grey40", linewidth = .3) +
+  geom_col(width = .65) +
+  geom_hline(yintercept = 0, colour = PAL$grid, linewidth = .3) +
   geom_text(aes(label = sprintf("%.2f", r2), hjust = ifelse(r2 >= 0, -0.15, 1.1)), size = 3.2) +
   coord_flip() + facet_wrap(~metric) +
-  scale_fill_manual(values = c(`TRUE` = "grey35", `FALSE` = "white"), guide = "none") +
+  # sign is already carried by the bar direction and the printed value, so the
+  # fill is reinforcement, not the only cue: no legend.
+  scale_fill_manual(values = c(`TRUE` = PAL$teal, `FALSE` = PAL$terracotta), guide = "none") +
   ylim(-0.6, 1) + th +
   labs(x = NULL, y = expression("Outcome recovery " * R^2 * " (1 " - " SSE/SST)"))
 ggsave(file.path(EN, "e2tree_necessity.png"), p_nec, width = 10.4, height = 4.2, dpi = 140)
@@ -75,7 +78,7 @@ pB_df <- sim_tab %>%
   mutate(representation = factor(representation, levels = representation),
          lab = sprintf("%.1f%%", within_share_pct))
 pB <- ggplot(pB_df, aes(representation, within_share_pct)) +
-  geom_col(width = .6, fill = "grey45", colour = "black", linewidth = .3) +
+  geom_col(width = .6, fill = PAL$teal) +
   geom_text(aes(label = lab), vjust = -0.4, size = 4) +
   scale_x_discrete(labels = function(x) gsub(", ", ",\n", gsub(" \\(", "\n(", x))) +
   ylim(0, max(pB_df$within_share_pct) * 1.25) +

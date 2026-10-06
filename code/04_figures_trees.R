@@ -11,6 +11,7 @@ args <- commandArgs(trailingOnly = FALSE)
 script_path <- sub("^--file=", "", grep("^--file=", args, value = TRUE))
 ROOT <- if (length(script_path)) dirname(dirname(normalizePath(script_path))) else normalizePath("..")
 EN <- file.path(ROOT, "manuscript", "manuscript_DSS_v2", "figures")
+source(file.path(ROOT, "code", "palette.R"))
 dir.create(EN, recursive = TRUE, showWarnings = FALSE)
 S1 <- readRDS(file.path(ROOT, "output", "repro", "cache", "S1_main.rds"))
 
@@ -35,18 +36,31 @@ truncate_rpart <- function(rp, d){
   rp
 }
 
+# box.palette: one teal ramp for the between tree, whose node values are solvency
+# LEVELS and run one way; a two-sided ramp for the within tree, whose node values
+# are demeaned deviations, so zero has to read as neutral and the two signs as
+# opposite. Both ramps stay light: rpart.plot prints the node text in black.
 draw_tree <- function(comp, main, file, w, h, tweak,
+                      box.palette = PAL$box_teal, diverging = FALSE,
                       extra=101, split.cex=0.95, space=0.4, mtop=2.2, max_depth=Inf){
   rp <- plot_e2tree(comp$tree, comp$ensemble)
   rp$frame$yval[abs(rp$frame$yval) < 1e-9] <- 0   # clean 0 for demeaned within
   if (is.finite(max_depth)) rp <- truncate_rpart(rp, max_depth)
+  # Pass either box.palette or box.col, never both, since rpart.plot derives the
+  # one from the other. Hence do.call with only the argument that applies.
+  # (The full within tree warns "labs do not fit even at cex 0.15": it is dense
+  # enough that the split labels overlap at this size, and it did so with the
+  # earlier grey palette too. The main text uses the four-level version.)
+  fill <- if (diverging) list(box.col = diverging_box_col(rp$frame$yval))
+          else list(box.palette = box.palette)
   png(file.path(EN, file), width=w, height=h, res=150)
   par(mar=c(0,0,0.4,0), xpd=NA)          # no title: only a thin top margin
-  rpart.plot::rpart.plot(
-    rp, type=2, extra=extra, box.palette=c("#F7F7F7","#E8E8E8","#D9D9D9","#C9C9C9","#BABABA"), branch=.3,
+  do.call(rpart.plot::rpart.plot, c(list(
+    rp, type=2, extra=extra, branch=.3,
     fallen.leaves=TRUE, roundint=FALSE, tweak=tweak,
     split.cex=split.cex, faclen=0, varlen=0, gap=0, space=space,
-    shadow.col=NULL, main=NULL)     # figure titles removed (kept in captions)
+    shadow.col=NULL, main=NULL),      # figure titles removed (kept in captions)
+    fill))
   dev.off()
 }
 
@@ -60,10 +74,12 @@ draw_tree(S1$between,
 draw_tree(S1$within,
           "Within tree: what moves solvency over time (within-firm deviations)",
           "panele2_within_diagram.png", w=3800, h=1800, tweak=0.92,
+          diverging=TRUE,
           extra=1, split.cex=0.9, space=0.6, mtop=1.6)
 
 # Main-text display: top four levels of the same within tree, for readability.
 draw_tree(S1$within,
           "Within tree, top four levels: what moves solvency over time (within-firm deviations)",
           "panele2_within_diagram_top.png", w=2800, h=1080, tweak=1.05,
+          diverging=TRUE,
           extra=1, split.cex=0.95, space=0.5, mtop=1.8, max_depth=4)
