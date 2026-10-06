@@ -1,0 +1,5 @@
+idea,target,n_firms,n_obs,ICC_target,pred_ICC_med,R2_pooled,R2_between,R2_within,drivers_rankcorr,top3_overlap
+Idea1_ROA,roa_pbt,241893,2418930,0.396,0.695,0.595,0.393,0.472,0.65,0.5
+Idea2_Leverage,gearing,183526,1835260,0.617,0.565,0.462,0.243,0.164,-0.1,0.2
+Idea3_Productivity,va_per_emp,243653,2436530,0.574,0.631,0.755,0.516,0.296,0.57,0.5
+Idea4_Solvency,solvency_asset,214144,2141440,0.811,0.533,0.638,0.525,0.377,0.82,0.5

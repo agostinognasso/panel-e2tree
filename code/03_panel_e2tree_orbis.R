@@ -1,11 +1,10 @@
-# 03_panel_e2tree_orbis.R — single source for EVERY number of the ORBIS
-# application of the "Panel e2tree" paper. Mirrors ../DSS/code/paper_reproduce.R
-# but on the European firm panel:
+# 03_panel_e2tree_orbis.R — single source for every number of the ORBIS
+# application of the "Panel e2tree" paper, on the European firm panel:
 #   outcome = solvency_asset (equity/total assets, %)   unit = bvdid   time = year
 #
 # Usage:   Rscript code/03_panel_e2tree_orbis.R     (from the project root)
 # Output:  output/repro/*.csv  (one file per table/figure) + paper_numbers.csv
-#          manuscript/figures/e2tree_necessity.png, panele2_fidelity.png
+#          manuscript/manuscript_DSS_v2/figures/{e2tree_necessity,proximity_decomp}.png
 #          output/repro/sessionInfo.txt
 # Each step caches in output/repro/cache/ and is skipped on re-run
 # (delete the cache or set REPRO_FORCE=1 to recompute).
@@ -19,7 +18,9 @@ stopifnot(file.exists(file.path(BASE, "data", "model_data.rds")))
 
 OUT   <- file.path(BASE, "output", "repro")
 CACHE <- file.path(OUT, "cache")
-FEN   <- file.path(BASE, "manuscript", "figures")
+FEN   <- file.path(BASE, "manuscript", "manuscript_DSS_v2", "figures")
+# e2tree_necessity.png is written here and then overwritten by 07_figures_v2.R,
+# which adds the 59-leaf budget row. Keep the order 03 -> 07.
 dir.create(CACHE, recursive = TRUE, showWarnings = FALSE)
 dir.create(FEN,   recursive = TRUE, showWarnings = FALSE)
 
@@ -34,7 +35,19 @@ step <- function(name, expr) {
   if (!FORCE && file.exists(f)) return(readRDS(f))
   val <- expr; saveRDS(val, f); val
 }
-numbers <- list(); put <- function(key, value) numbers[[key]] <<- value
+numbers <- list()
+# put(key, value, digits): `digits` rounds the value and records the number of
+# decimals the LaTeX macro must print, so 0.58 is written "0.580" and the text
+# never shows a result with fewer decimals than the others. The value stays
+# numeric: the tables and figures at the bottom still compute with it.
+put <- function(key, value, digits = NULL) {
+  if (!is.null(digits)) { value <- round(value, digits); attr(value, "digits") <- digits }
+  numbers[[key]] <<- value
+}
+fmt_number <- function(v) {
+  d <- attr(v, "digits")
+  if (is.null(d)) paste(v, collapse = " ") else paste(sprintf("%.*f", d, v), collapse = " ")
+}
 
 icc_of <- function(x, g) {
   m <- tapply(x, g, mean); ng <- tapply(x, g, length)
@@ -55,7 +68,7 @@ r2_between_of <- function(y, pred, g) {
 
 # --- Proposition 1: regularity constant c_B and threshold ICC*, operationalised.
 # The proposition is stated for a variance-reduction (CART) surrogate; c_B is
-# calibrated by the LEADING between contrast -- the best between split at the root,
+# calibrated by the leading between contrast -- the best between split at the root,
 # where all N units are still mixed -- on the unit-mean data {(xbar_i, ybar_i)}:
 #   c_B = K * Delta_B* / sigma_B^2 ,   ICC* = sigma_B^2 / (sigma_B^2 + Delta_B*).
 # var_parts() returns the ANOVA between/within variance components (sigma_B^2, sigma_W^2);
@@ -106,14 +119,14 @@ put("n_obs",       nrow(md))
 put("n_firms",     length(unique(md[[UNIT]])))
 put("n_countries", length(unique(md$country)))
 put("year_min",    min(md[[TIME]])); put("year_max", max(md[[TIME]]))
-put("icc_solv",    round(icc_of(md[[OUTCOME]], md[[UNIT]]), 3))
+put("icc_solv",    icc_of(md[[OUTCOME]], md[[UNIT]]), 3)
 form_solv <- reformulate(feats, OUTCOME)
 
-# population (full-pool) ICC of the target — the structural necessity fact
+# population (full-pool) ICC of the target, the structural necessity fact
 poolf <- file.path(BASE, "data", "orbis_eu_pool.rds")
 if (file.exists(poolf)) {
   pl <- readRDS(poolf)
-  put("icc_solv_poolwide", round(icc_of(pl[[OUTCOME]], pl[[UNIT]]), 3))
+  put("icc_solv_poolwide", icc_of(pl[[OUTCOME]], pl[[UNIT]]), 3)
   put("n_firms_pool", format(length(unique(pl[[UNIT]])), big.mark = "{,}"))
   rm(pl)
 }
@@ -126,25 +139,25 @@ m_main <- step("S1_main", {
                engine = "ranger", ntree = 500,
                setting_between = SET_B, setting_within = SET_W, seed = 123)
 })
-put("between_fidelity", round(m_main$between$fidelity, 3))
-put("within_fidelity",  round(m_main$within$fidelity, 3))
-put("panel_r2",         round(m_main$r2_panel, 3))
-put("panel_cor2",       round(m_main$outcome_var_recovered, 3))
-put("within_signal",    round(m_main$within_signal, 3))
+put("between_fidelity", m_main$between$fidelity, 3)
+put("within_fidelity",  m_main$within$fidelity, 3)
+put("panel_r2",         m_main$r2_panel, 3)
+put("panel_cor2",       m_main$outcome_var_recovered, 3)
+put("within_signal",    m_main$within_signal, 3)
 put("between_leaves",   n_leaves(m_main$between$tree))
 put("within_leaves",    n_leaves(m_main$within$tree))
 put("between_vars",     paste(m_main$between$variables, collapse = ", "))
 put("within_vars",      paste(m_main$within$variables, collapse = ", "))
-put("within_oob_r2",    round(m_main$within$ensemble$r.squared, 3))
-put("gap_bound",        round((1 - numbers[["icc_solv"]]) * numbers[["within_oob_r2"]], 3))
-put("decomp_r2_within",  round(r2_within_of(md[[OUTCOME]], m_main$predictions$.panel, md[[UNIT]]), 3))
-put("decomp_r2_between", round(r2_between_of(md[[OUTCOME]], m_main$predictions$.panel, md[[UNIT]]), 3))
+put("within_oob_r2",    m_main$within$ensemble$r.squared, 3)
+put("gap_bound",        (1 - numbers[["icc_solv"]]) * numbers[["within_oob_r2"]], 3)
+put("decomp_r2_within",  r2_within_of(md[[OUTCOME]], m_main$predictions$.panel, md[[UNIT]]), 3)
+put("decomp_r2_between", r2_between_of(md[[OUTCOME]], m_main$predictions$.panel, md[[UNIT]]), 3)
 
 # tree-reading anchors quoted in the walk-through of Section "Application":
 # between root threshold, lowest between leaf (%), deepest within leaf (|points|)
 tb_fr <- m_main$between$tree$tree
 tw_fr <- m_main$within$tree$tree
-put("between_root_thr",   round(as.numeric(sub("^.*<=\\s*", "", tb_fr$splitLabel[1])), 1))
+put("between_root_thr",   as.numeric(sub("^.*<=\\s*", "", tb_fr$splitLabel[1])), 1)
 put("between_low_leaf",   round(min(as.numeric(tb_fr$pred[tb_fr$terminal]))))
 put("within_low_leaf_abs", round(abs(min(as.numeric(tw_fr$pred[tw_fr$terminal])))))
 
@@ -154,8 +167,8 @@ R2root_solv <- leading_between_gain(m_main$unit_means, OUTCOME, feats)
 Kbud_solv   <- n_leaves(m_main$between$tree)
 put("sigma_w2_solv", round(vp_solv[["vw"]]))
 put("delta_b_solv",  round(R2root_solv * vp_solv[["vb"]]))
-put("c_b_solv",      round(Kbud_solv * R2root_solv, 1))
-put("icc_star_solv", round(1 / (1 + R2root_solv), 3))
+put("c_b_solv",      Kbud_solv * R2root_solv, 1)
+put("icc_star_solv", 1 / (1 + R2root_solv), 3)
 
 # ---------------------------------------------------------------------------
 # S2 — shortcut (a): pooled single e2tree on raw features (+ capacity-matched)
@@ -173,16 +186,16 @@ s2 <- step("S2_pooled", {
   list(pooled = slim(pooled, md[[OUTCOME]], md[[UNIT]]),
        matched = slim(matched, md[[OUTCOME]], md[[UNIT]]))
 })
-put("pooled_r2_vs_y",   round(s2$pooled$r2_vs_y, 3))
-put("pooled_cor2_vs_y", round(s2$pooled$cor2_vs_y, 3))
-put("pooled_fid_vs_ens",round(s2$pooled$fid_vs_ens, 3))
+put("pooled_r2_vs_y",   s2$pooled$r2_vs_y, 3)
+put("pooled_cor2_vs_y", s2$pooled$cor2_vs_y, 3)
+put("pooled_fid_vs_ens",s2$pooled$fid_vs_ens, 3)
 put("pooled_leaves",    s2$pooled$leaves)
-put("pooled_r2_within", round(s2$pooled$r2_within, 3))
-put("pooled_r2_between",round(s2$pooled$r2_between, 3))
-put("matched_r2_vs_y",  round(s2$matched$r2_vs_y, 3))
+put("pooled_r2_within", s2$pooled$r2_within, 3)
+put("pooled_r2_between",s2$pooled$r2_between, 3)
+put("matched_r2_vs_y",  s2$matched$r2_vs_y, 3)
 put("matched_leaves",   s2$matched$leaves)
-put("matched_r2_within",round(s2$matched$r2_within, 3))
-put("matched_r2_between",round(s2$matched$r2_between, 3))
+put("matched_r2_within",s2$matched$r2_within, 3)
+put("matched_r2_between",s2$matched$r2_between, 3)
 put("decomp_leaves_total", numbers[["between_leaves"]] + numbers[["within_leaves"]])
 
 # ---------------------------------------------------------------------------
@@ -227,15 +240,15 @@ s3 <- step("S3_augmented", {
        ens_root_bw_share = mean(grepl("_bw$", sv_root), na.rm = TRUE),
        ens_share_bw = mean(grepl("_bw$", sv_all)))
 })
-put("aug_r2_vs_y",      round(s3$r2_vs_y, 3))
-put("aug_r2_within",    round(s3$r2_within, 3))
-put("aug_r2_between",   round(s3$r2_between, 3))
+put("aug_r2_vs_y",      s3$r2_vs_y, 3)
+put("aug_r2_within",    s3$r2_within, 3)
+put("aug_r2_between",   s3$r2_between, 3)
 put("aug_splits_bw",    sum(grepl("_bw$", s3$vars)))
 put("aug_splits_wn",    sum(grepl("_wn$", s3$vars)))
 put("aug_leaves",       s3$leaves)
 put("aug_top10_bw",     round(100 * s3$top10_bw_share))   # percentage of the top-10 root candidates
-put("ens_root_bw_share",round(s3$ens_root_bw_share, 3))
-put("ens_share_bw",     round(s3$ens_share_bw, 3))
+put("ens_root_bw_share",s3$ens_root_bw_share, 3)
+put("ens_share_bw",     s3$ens_share_bw, 3)
 
 # ---------------------------------------------------------------------------
 # S4 — shortcut (b): PERMANOVA decomposition of a pooled proximity
@@ -269,12 +282,12 @@ s4 <- step("S4_permanova", {
   list(real_between = unname(sh_real["between"]), sims = sims)
 })
 write.csv(s4$sims, file.path(OUT, "proximity_decomp.csv"), row.names = FALSE)
-put("prox_between_real",  round(s4$real_between, 3))
-put("prox_between_range", paste(round(range(s4$sims$prox_between), 2), collapse = "-"))
-put("prox_icc_range",     paste(round(range(s4$sims$icc_emp), 2), collapse = "-"))
+put("prox_between_real",  s4$real_between, 3)
+put("prox_between_range", paste(sprintf("%.2f", range(s4$sims$prox_between)), collapse = "-"))
+put("prox_icc_range",     paste(sprintf("%.2f", range(s4$sims$icc_emp)), collapse = "-"))
 
 # ---------------------------------------------------------------------------
-# S5 — target = "pooled": explaining a GIVEN pooled ensemble
+# S5 — target = "pooled": explaining a given pooled ensemble
 # ---------------------------------------------------------------------------
 s5 <- step("S5_pooled_target", {
   set.seed(123)
@@ -290,10 +303,10 @@ s5 <- step("S5_pooled_target", {
        bridge_r2 = r2_honest(fhat, m_main$predictions$.panel),
        icc_fhat = icc_of(fhat, md[[UNIT]]))
 })
-put("pooledtarget_r2",        round(s5$r2_vs_pooled, 3))
-put("pooledtarget_within_fid",round(s5$within_fid, 3))
-put("bridge_r2",              round(s5$bridge_r2, 3))
-put("icc_pooled_preds",       round(s5$icc_fhat, 3))
+put("pooledtarget_r2",        s5$r2_vs_pooled, 3)
+put("pooledtarget_within_fid",s5$within_fid, 3)
+put("bridge_r2",              s5$bridge_r2, 3)
+put("icc_pooled_preds",       s5$icc_fhat, 3)
 
 # ---------------------------------------------------------------------------
 # S6 — within = "twoway": common period effects separated (captures 2020 COVID)
@@ -309,9 +322,9 @@ s6 <- step("S6_twoway", {
        trend_cor = cor(tm$.time, tm[[OUTCOME]]))
 })
 write.csv(s6$time_effects, file.path(OUT, "twoway_time_effects.csv"), row.names = FALSE)
-put("twoway_r2",         round(s6$r2_panel, 3))
-put("twoway_within_fid", round(s6$within_fid, 3))
-put("twoway_trend_cor",  round(s6$trend_cor, 3))
+put("twoway_r2",         s6$r2_panel, 3)
+put("twoway_within_fid", s6$within_fid, 3)
+put("twoway_trend_cor",  s6$trend_cor, 3)
 
 # ---------------------------------------------------------------------------
 # S7 — out-of-time validation: train <= 2020, explain 2021-2022
@@ -328,11 +341,11 @@ s7 <- step("S7_holdout", {
        oot_r2_within  = r2_within_of (te[[OUTCOME]], pr$.panel, te[[UNIT]]),
        oot_r2_between = r2_between_of(te[[OUTCOME]], pr$.panel, te[[UNIT]]))
 })
-put("oot_n", s7$n_test); put("oot_r2", round(s7$oot_r2, 3)); put("oot_cor2", round(s7$oot_cor2, 3))
+put("oot_n", s7$n_test); put("oot_r2", s7$oot_r2, 3); put("oot_cor2", s7$oot_cor2, 3)
 put("oot_train_max", 2020); put("oot_test_min", 2021)  # the split years of tr_idx above
 if (!is.null(s7$oot_r2_within)) {   # absent only in pre-extension caches
-  put("oot_r2_within",  round(s7$oot_r2_within, 3))
-  put("oot_r2_between", round(s7$oot_r2_between, 3))
+  put("oot_r2_within",  s7$oot_r2_within, 3)
+  put("oot_r2_between", s7$oot_r2_between, 3)
 }
 
 # ---------------------------------------------------------------------------
@@ -377,16 +390,16 @@ sim_tab <- data.frame(
                 paste(sort(s8$within$vars), collapse = ", ")),
   fidelity = round(c(s8$pooled$fid, s8$between$fid, s8$within$fid), 3))
 write.csv(sim_tab, file.path(OUT, "sim_known_roles.csv"), row.names = FALSE)
-put("icc_sim", round(s8$icc_sim, 2))
+put("icc_sim", s8$icc_sim, 2)
 put("sim_pooled_vars",  paste(sort(s8$pooled$vars), collapse = ", "))
 put("sim_between_vars", paste(sort(s8$between$vars), collapse = ", "))
 put("sim_within_vars",  paste(sort(s8$within$vars), collapse = ", "))
-put("sim_pooled_fid",   round(s8$pooled$fid, 3))
-put("sim_between_fid",  round(s8$between$fid, 3))
-put("sim_within_fid",   round(s8$within$fid, 3))
-put("sim_inter_r2_g0",  round(s8$interaction$r2_panel[1], 3))
-put("sim_inter_r2_g05", round(s8$interaction$r2_panel[2], 3))
-put("sim_inter_r2_g1",  round(s8$interaction$r2_panel[3], 3))
+put("sim_pooled_fid",   s8$pooled$fid, 3)
+put("sim_between_fid",  s8$between$fid, 3)
+put("sim_within_fid",   s8$within$fid, 3)
+put("sim_inter_r2_g0",  s8$interaction$r2_panel[1], 3)
+put("sim_inter_r2_g05", s8$interaction$r2_panel[2], 3)
+put("sim_inter_r2_g1",  s8$interaction$r2_panel[3], 3)
 
 # ---------------------------------------------------------------------------
 # S9 — within importance across seeds (stability of the ranking)
@@ -424,17 +437,15 @@ s10 <- step("S10_reduced", {
                  setting_between = SET_B, setting_within = SET_W, seed = 123))
   list(within_fid = m8$within$fidelity, within_signal = m8$within_signal)
 })
-put("reduced_within_fid", round(s10$within_fid, 3))
+put("reduced_within_fid", s10$within_fid, 3)
 
 # proximity negative-control figure (Fig. shortcuts panel b)
 th0 <- theme_minimal(base_size = 12) + theme(panel.grid.minor = element_blank())
 p_prox <- ggplot(s4$sims, aes(icc_emp, prox_between)) +
-  geom_line(colour = "#d95f02", linewidth = 1) + geom_point(size = 2) +
+  geom_line(colour = "black", linewidth = .8) + geom_point(size = 2) +
   geom_abline(slope = 1, intercept = 0, linetype = 2, colour = "grey50") +
   ylim(0, 1) + xlim(0, 1) + th0 +
-  labs(title = "Negative control: pooled proximity between-share vs true ICC",
-       subtitle = "the between share stays flat as ICC rises (dashed = identity)",
-       x = "true ICC of the outcome", y = "between share of pooled proximity")
+  labs(x = "true ICC of the outcome", y = "between share of pooled proximity")
 ggsave(file.path(FEN, "proximity_decomp.png"), p_prox, width = 6.4, height = 4.2, dpi = 140)
 
 # ---------------------------------------------------------------------------
@@ -477,21 +488,8 @@ p_nec <- ggplot(nec_long, aes(approach, r2, fill = r2 > 0)) +
   coord_flip() + facet_wrap(~metric) +
   scale_fill_manual(values = c(`TRUE` = "#1b9e77", `FALSE` = "#d95f02"), guide = "none") +
   ylim(-0.6, 1) + th +
-  labs(title = "Capacity buys between structure, never the within signal",
-       subtitle = "single-model shortcuts have negative or nil within-component R²; only the decomposition earns it",
-       x = NULL, y = "honest R² (1 − SSE/SST) vs observed solvency")
+  labs(x = NULL, y = "honest R² (1 − SSE/SST) vs observed solvency")
 ggsave(file.path(FEN, "e2tree_necessity.png"), p_nec, width = 10, height = 3.8, dpi = 140)
-
-p_fid <- data.frame(
-  explanation = c("pooled (1 tree)", "panel decomposed\n(between+within)"),
-  R2 = c(numbers[["pooled_r2_vs_y"]], numbers[["panel_r2"]])) %>%
-  mutate(explanation = factor(explanation, levels = explanation)) %>%
-  ggplot(aes(explanation, R2, fill = explanation)) +
-  geom_col(width = .6) + geom_text(aes(label = sprintf("R²=%.2f", R2)), vjust = -0.4) +
-  scale_fill_manual(values = c("#d95f02", "#1b9e77"), guide = "none") + ylim(0, 1) + th +
-  labs(title = "Explanation quality: pooled vs panel-decomposed (solvency)",
-       x = NULL, y = "outcome variance recovered (honest R²)")
-ggsave(file.path(FEN, "panele2_fidelity.png"), p_fid, width = 6.5, height = 4.3, dpi = 140)
 
 # SHAP quantities quoted in Section "Between dominance degrades model-agnostic
 # explanations": read from the CSVs written by code/17_shap_panel.R (if present),
@@ -505,17 +503,17 @@ if (all(file.exists(shap_sum, shap_pan, shap_sim))) {
   raw <- raw[order(-raw$shap_importance_pct), ]
   wn  <- sp[sp$stage == "within representation", ]
   wn  <- wn[order(-wn$shap_importance_pct), ]
-  put("shap_icc_mean", round(ss$mean_shap_icc_raw, 2))
-  put("shap_icc_min",  floor(min(raw$shap_icc, na.rm = TRUE) * 100) / 100)  # floor keeps "at x or above" true
+  put("shap_icc_mean", ss$mean_shap_icc_raw, 2)
+  put("shap_icc_min",  floor(min(raw$shap_icc, na.rm = TRUE) * 100) / 100, 2)  # floor keeps "at x or above" true
   put("shap_raw_top1", round(raw$shap_importance_pct[1]))
   put("shap_raw_top2", round(raw$shap_importance_pct[2]))
   put("shap_raw_top3", round(raw$shap_importance_pct[3]))
   put("shap_wn_top1",  round(wn$shap_importance_pct[1]))
   put("shap_wn_top2",  round(wn$shap_importance_pct[2]))
   put("shap_wn_top3",  round(wn$shap_importance_pct[3]))
-  put("shap_sim_raw",  sm$within_share_pct[1])
-  put("shap_sim_aug",  sm$within_share_pct[2])
-  put("shap_sim_sep",  sm$within_share_pct[3])
+  put("shap_sim_raw",  sm$within_share_pct[1], 1)
+  put("shap_sim_aug",  sm$within_share_pct[2], 1)
+  put("shap_sim_sep",  sm$within_share_pct[3], 1)
 }
 
 # Proposition 1 on the simulation: regenerate the identical synthetic panel (seed 123,
@@ -535,10 +533,10 @@ sim_cb <- local({
   R2   <- leading_between_gain(um, "y", c("A", "B", "Z1", "Z2"))
   list(cB = 12 * R2, iccstar = 1 / (1 + R2))          # K = 12 (ICC* is K-free)
 })
-put("c_b_sim",      round(sim_cb$cB, 1))
-put("icc_star_sim", round(sim_cb$iccstar, 3))
+put("c_b_sim",      sim_cb$cB, 1)
+put("icc_star_sim", sim_cb$iccstar, 3)
 
 mast <- data.frame(key = names(numbers),
-                   value = vapply(numbers, function(v) paste(v, collapse = " "), character(1)))
+                   value = vapply(numbers, fmt_number, character(1)))
 write.csv(mast, file.path(OUT, "paper_numbers.csv"), row.names = FALSE)
 writeLines(capture.output(sessionInfo()), file.path(OUT, "sessionInfo.txt"))

@@ -1,0 +1,54 @@
+{
+  "title": "Panel e2tree: ORBIS application",
+  "upload_type": "software",
+  "description": "<p>Reproducible pipeline for the empirical application of the panel e2tree framework, from the Bureau van Dijk ORBIS extraction script to the LaTeX macros quoted in the paper.</p><p>The feature representation of a tree ensemble fitted to a European firm panel is split into a between part (firm means) and a within part (firm-demeaned deviations), and each part is explained by its own Explainable Ensemble Tree surrogate. The target is the asset-based solvency ratio.</p><p><strong>Code only.</strong> ORBIS is a licensed, proprietary source: neither the raw extracts nor the derived .rds files are redistributed, and reproducing the pipeline end to end requires a valid ORBIS subscription. The aggregate results are included (one CSV per paper table, the master list of every number quoted in the text, the diagnostic plots and the sessionInfo of the reported run), so the published numbers can be checked without the data.</p>",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Aria, Massimo",
+      "affiliation": "Department of Economics and Statistics, University of Naples Federico II"
+    },
+    {
+      "name": "Gnasso, Agostino",
+      "affiliation": "Department of Economics and Statistics, University of Naples Federico II",
+      "orcid": "0000-0002-8046-3923"
+    },
+    {
+      "name": "Iorio, Carmela",
+      "affiliation": "Department of Economics and Statistics, University of Naples Federico II"
+    }
+  ],
+  "keywords": [
+    "explainable machine learning",
+    "panel data",
+    "longitudinal data",
+    "surrogate models",
+    "ensemble trees",
+    "decision support systems",
+    "intraclass correlation",
+    "R"
+  ],
+  "language": "eng",
+  "related_identifiers": [
+    {
+      "identifier": "10.1007/s00180-022-01312-6",
+      "relation": "cites",
+      "scheme": "doi",
+      "resource_type": "publication-article"
+    },
+    {
+      "identifier": "10.1002/asmb.70064",
+      "relation": "cites",
+      "scheme": "doi",
+      "resource_type": "publication-article"
+    },
+    {
+      "identifier": "https://github.com/agostinognasso/e2tree",
+      "relation": "requires",
+      "scheme": "url",
+      "resource_type": "software"
+    }
+  ],
+  "notes": "Requires the e2tree R package pinned at commit 644d06f (github.com/agostinognasso/e2tree); the CRAN release 1.2.0 does not reproduce the reported numbers. TODO before publishing this version: add the article DOI as an isSupplementTo related identifier."
+}

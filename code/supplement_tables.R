@@ -1,7 +1,7 @@
 # supplement_tables.R — generate LaTeX table fragments for the Supplementary
 # Material from the pipeline outputs, so no number in the supplement is typed by
 # hand (same discipline as numbers_to_tex.R for the main text). Fragments are
-# written to manuscript/supp/ and \input by manuscript/supplementary.tex.
+# written to manuscript/manuscript_DSS_v2/supp/ and \input by supplementary.tex.
 # Run after code/03_panel_e2tree_orbis.R and code/17_shap_panel.R.
 suppressWarnings(suppressPackageStartupMessages(library(rpart)))
 
@@ -9,7 +9,8 @@ args <- commandArgs(trailingOnly = FALSE)
 sp <- sub("^--file=", "", grep("^--file=", args, value = TRUE))
 BASE <- if (length(sp)) dirname(dirname(normalizePath(sp))) else normalizePath("..")
 OUT <- file.path(BASE, "output"); REP <- file.path(OUT, "repro")
-SUPP <- file.path(BASE, "manuscript", "supp"); dir.create(SUPP, showWarnings = FALSE)
+SUPP <- file.path(BASE, "manuscript", "manuscript_DSS_v2", "supp")
+dir.create(SUPP, recursive = TRUE, showWarnings = FALSE)
 
 esc  <- function(s) gsub("_", "\\\\_", s)                 # escape underscores for LaTeX text
 tt   <- function(s) sprintf("\\texttt{%s}", esc(s))       # monospace variable names

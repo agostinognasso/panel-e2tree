@@ -1,0 +1,4 @@
+"run","n_features","between_fidelity","within_fidelity","panel_r2","within_signal","between_leaves","within_leaves","r2_within","r2_between","within_vars","minutes"
+"full",11,0.65500562375784,0.477150817376325,0.455492246673346,0.349268941987788,12,47,0.28627943221208,0.487943577397577,"current_ratio, icover, cf_margin, firm_age, liquidity_ratio, roa_pbt, stock_turnover, wc_gap, rev_per_emp, ln_assets, ebitda_margin",0.12
+"no_age",10,0.640862803399664,0.482184528216723,0.435913798133972,0.380932455216709,13,34,0.278466562461214,0.466108747214508,"current_ratio, icover, cf_margin, roa_pbt, liquidity_ratio, rev_per_emp, ln_assets, stock_turnover",0.11
+"no_age_size",9,0.649758488476399,0.483518603845204,0.426259267527614,0.419928561744339,13,39,0.278081665726128,0.454676502813792,"current_ratio, icover, cf_margin, liquidity_ratio, roa_pbt, wc_gap, stock_turnover, rev_per_emp, ebitda_margin",0.11

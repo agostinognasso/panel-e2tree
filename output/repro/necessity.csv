@@ -1,0 +1,5 @@
+"approach","R2_vs_y","R2_within","R2_between","leaves"
+"(a) pooled e2tree, raw features",0.28,-0.12,0.356,14
+"(a') pooled, capacity-matched",0.282,-0.119,0.359,18
+"(c) single e2tree, Mundlak-augmented",0.052,0.001,0.062,13
+"(d) two-representation (between+within)",0.455,0.286,0.488,59

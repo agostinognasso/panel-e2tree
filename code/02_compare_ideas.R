@@ -1,16 +1,16 @@
 # 02 — Comparative screening of the 4 candidate ORBIS applications
 #
 # For each idea we ask two questions the paper cares about:
-#   (1) FEASIBILITY / NECESSITY — is the target's ICC > 0.8 (between-dominated)?
+#   (1) Feasibility / necessity: is the target's ICC > 0.8 (between-dominated)?
 #       and how much complete-case balanced panel data survives?
-#   (2) INTERESTINGNESS — once decomposed a la Mundlak, do the BETWEEN drivers
-#       (what explains the firm's level) and the WITHIN drivers (what explains
-#       its year-on-year moves) actually DIFFER, and is there real within signal?
+#   (2) Interestingness: once decomposed a la Mundlak, do the between drivers
+#       (what explains the firm's level) and the within drivers (what explains
+#       its year-on-year moves) actually differ, and is there real within signal?
 #       If between and within tell the same story, the decomposition adds little;
 #       if they diverge, the panel e2tree is compelling.
 #
-# Each idea is evaluated on ITS OWN natural complete-case, balanced (10-year)
-# universe — not a universe pre-filtered for another target.
+# Each idea is evaluated on its own natural complete-case, balanced (10-year)
+# universe, not one pre-filtered for another target.
 #
 # Inputs : data/raw/output/orbis_eu_*.tsv  (rich 43-col extract from 00_extract_orbis.sh)
 # Outputs: output/idea_comparison.csv            headline table
@@ -152,7 +152,7 @@ for (nm in names(ideas)) {
   betw   <- rf_rsq(fb, as.data.frame(bw))
   with_  <- rf_rsq(fb, as.data.frame(wn))
 
-  # driver divergence between BETWEEN and WITHIN importances (shared feats)
+  # driver divergence between the between and within importances (shared feats)
   shared <- intersect(names(betw$imp), names(with_$imp)); shared <- setdiff(shared, tg)
   rcorr <- suppressWarnings(cor(rank(betw$imp[shared]), rank(with_$imp[shared]),
                                 method = "spearman"))
@@ -189,9 +189,7 @@ p1 <- ggplot(comp, aes(reorder(idea, ICC_target), ICC_target)) +
   geom_hline(yintercept = 0.8, linetype = 2) +
   scale_fill_manual(values = c(`TRUE` = "#1b9e77", `FALSE` = "#d95f02"), guide = "none") +
   coord_flip() + ylim(0, 1) + th +
-  labs(title = "Target ICC by idea (necessity for panel e2tree)",
-       subtitle = "green = clears the 0.8 between-dominance threshold",
-       x = NULL, y = "ICC (between share of variance)")
+  labs(x = NULL, y = "ICC (between share of variance)")
 ggsave(file.path(PLT, "idea_icc.png"), p1, width = 7.5, height = 4.5, dpi = 130)
 
 cm <- melt(comp[, .(idea, R2_between, R2_within)], id.vars = "idea")
@@ -200,5 +198,5 @@ p2 <- ggplot(cm, aes(idea, value, fill = variable)) +
   scale_fill_manual(values = c("#7570b3", "#e7298a"),
                     labels = c("between (levels)", "within (changes)"), name = NULL) +
   theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
-  labs(title = "Explained variance: between vs within", x = NULL, y = expression(R^2))
+  labs(x = NULL, y = expression(R^2))
 ggsave(file.path(PLT, "idea_between_within_R2.png"), p2, width = 7.5, height = 4.5, dpi = 130)

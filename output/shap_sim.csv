@@ -1,0 +1,4 @@
+"representation","top_feature","within_driver","within_share_pct","within_rank","recovered"
+"raw features {A,B,Z1,Z2}","A","B",18.7,2,"no"
+"Mundlak-augmented, single model","A_bw","B_wn",19.1,2,"no"
+"within representation (separated)","B_wn","B_wn",88.7,1,"yes"

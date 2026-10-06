@@ -1,0 +1,13 @@
+"variable","n_obs","pct_obs","n_firms"
+"solvency_asset",8000,100,800
+"roa_pbt",8000,100,800
+"ebitda_margin",8000,100,800
+"cf_margin",8000,100,800
+"icover",8000,100,800
+"current_ratio",8000,100,800
+"liquidity_ratio",8000,100,800
+"wc_gap",8000,100,800
+"stock_turnover",8000,100,800
+"ln_assets",8000,100,800
+"firm_age",8000,100,800
+"rev_per_emp",8000,100,800

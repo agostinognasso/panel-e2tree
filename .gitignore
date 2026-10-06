@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Licensed ORBIS data: never commit. See data/DATA_README.md.
+data/*.rds
+data/raw/input/*
+data/raw/output/*
+!data/raw/input/.gitkeep
+!data/raw/output/.gitkeep
+
+# Fitted objects and caches
+*.rds
+output/repro/cache/
+
+# LaTeX build artefacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.spl
+*.synctex.gz

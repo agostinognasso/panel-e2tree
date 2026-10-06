@@ -1,8 +1,8 @@
 # 17 — Between dominance also degrades model-agnostic explanations (SHAP)
 #  The between/within problem is not specific to e2tree. On high-ICC panel data,
-#  SHAP attributions are themselves BETWEEN-dominated: SHAP explains "what
+#  SHAP attributions are themselves between-dominated: SHAP explains "what
 #  distinguishes the firms", nearly mute on "what moves them" over time.
-#  Decomposing the REPRESENTATION a la Mundlak rescues SHAP too.
+#  Decomposing the representation a la Mundlak rescues SHAP too.
 #
 #  (1) Simulation with known roles (A=between, B=within, Z=noise).
 #  (2) Real ORBIS solvency panel: ICC of the SHAP attributions is high (they vary
@@ -82,7 +82,7 @@ panel <- readRDS(file.path(DATA,"harmonized_panel.rds"))
 drv <- c("roa_pbt","ebitda_margin","cf_margin","icover","current_ratio",
          "liquidity_ratio","wc_gap","stock_turnover","rev_per_emp")
 
-# (2a) RAW features: pooled RF + SHAP + ICC of the attributions
+# (2a) Raw features: pooled RF + SHAP + ICC of the attributions
 raw <- panel %>% select(all_of(UNIT), all_of(OUTCOME), all_of(drv)) %>%
   filter(if_all(everything(), ~!is.na(.x))) %>% as.data.frame()
 icc_y <- between_share(raw[[OUTCOME]], raw[[UNIT]])
@@ -102,7 +102,7 @@ panel_tab <- data.frame(feature = drv, shap_importance_pct = unname(imp_raw[drv]
                         shap_icc = round(unname(shap_icc[drv]), 3)) %>%
   arrange(desc(shap_importance_pct))
 
-# (2b) separated WITHIN representation: SHAP recovers the within drivers
+# (2b) separated within representation: SHAP recovers the within drivers
 wn <- paste0(drv,"_wn")
 dw <- panel %>% select(all_of(UNIT), all_of(OUTCOME), all_of(wn)) %>%
   filter(if_all(everything(), ~!is.na(.x))) %>%
@@ -123,7 +123,7 @@ write.csv(out_panel, file.path(OUT,"shap_panel.csv"), row.names=FALSE)
 write.csv(data.frame(icc_y=round(icc_y,3), mean_shap_icc_raw=round(mean_shap_icc,3)),
           file.path(OUT,"shap_panel_summary.csv"), row.names=FALSE)
 
-# Figure — 2 panels
+# Figure: 2 panels
 have_patch <- requireNamespace("patchwork", quietly=TRUE)
 th <- theme_minimal(base_size=12) +
   theme(plot.title=element_text(face="bold", size=11), panel.grid.minor=element_blank())
@@ -135,8 +135,7 @@ pA <- ggplot(pA_df, aes(feature, shap_icc, fill=shap_icc)) +
            label=sprintf("outcome ICC = %.2f", icc_y), hjust=1, vjust=0.5, size=3.0, colour="grey30") +
   coord_flip() + ylim(0,1) +
   scale_fill_gradient(low="#7fb3d5", high="#1b4f72", guide="none") + th +
-  labs(title="(A) Real solvency panel: SHAP attributions are between-dominated",
-       subtitle="Between-share (ICC) of each feature's SHAP values", x=NULL, y="ICC of SHAP attribution")
+  labs(x=NULL, y="ICC of SHAP attribution")
 pB_df <- sim_tab %>% mutate(representation=factor(representation, levels=representation),
                             lab=sprintf("%.1f%%", within_share_pct))
 pB <- ggplot(pB_df, aes(representation, within_share_pct, fill=recovered)) +
@@ -144,9 +143,7 @@ pB <- ggplot(pB_df, aes(representation, within_share_pct, fill=recovered)) +
   scale_fill_manual(values=c(no="#d95f02", yes="#1b9e77"), name="within driver\nrecovered") +
   scale_x_discrete(labels=function(x) gsub(", ", ",\n", gsub(" \\(", "\n(", x))) +
   th + theme(axis.text.x=element_text(size=8)) + ylim(0, max(pB_df$within_share_pct)*1.25) +
-  labs(title="(B) Simulation: the within driver surfaces only after decomposition",
-       subtitle="SHAP importance (% of total) of the true within driver B",
-       x=NULL, y="SHAP share of true within driver (%)")
+  labs(x=NULL, y="SHAP share of true within driver (%)")
 if (have_patch){ library(patchwork); p <- pA + pB + patchwork::plot_layout(widths=c(1,1))
 } else { p <- gridExtra::arrangeGrob(pA, pB, ncol=2) }
 ggsave(file.path(PLT,"shap_panel.png"), p, width=11, height=4.4, dpi=140)

@@ -2,12 +2,12 @@
 # 00 — Pre-filter the heavy ORBIS .txt exports down to the European universe.
 #
 # The raw ORBIS exports (Bureau van Dijk, Dec-2025 snapshot) are tens-to-hundreds
-# of GB each and live on an external volume; they are NOT shipped with this
+# of GB each and live on an external volume; they are not shipped with this
 # package. This script streams them once with awk and writes compact, shippable
 # tab-separated extracts to data/raw/output/, which 01_build_orbis.R then turns
 # into the modelling panel.
 #
-# Universe: EUROPEAN firms — EU-27 + EFTA/EEA (CH, NO, IS, LI) + UK (GB), 32
+# Universe: European firms, EU-27 + EFTA/EEA (CH, NO, IS, LI) + UK (GB), 32
 # countries. The BvD ID number encodes the country in its first two characters,
 # so substr($1,1,2) selects the country without needing the Contact_info table.
 # (Russia, Ukraine and the non-EU Balkans are excluded for institutional
@@ -15,7 +15,7 @@
 # below to include them.)
 #
 # Financials are further restricted to: 12-month fiscal years (col 5),
-# UNCONSOLIDATED accounts (consolidation code col 2 starting with "U", the
+# Unconsolidated accounts (consolidation code col 2 starting with "U", the
 # standard regime for non-group firms, avoids double counting), non-empty Total
 # assets (col 21), and closing year in [2013, 2022]. We read the EUR-denominated
 # financials file so all countries are directly comparable.

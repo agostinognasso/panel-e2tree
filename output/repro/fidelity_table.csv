@@ -1,0 +1,5 @@
+"component","metric","value"
+"pooled (single tree)","outcome variance recovered (R2)",0.28
+"between","fidelity vs full ensemble",0.655
+"within","fidelity vs full ensemble",0.477
+"panel (between+within)","outcome variance recovered (R2)",0.455

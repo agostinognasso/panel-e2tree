@@ -1,0 +1,19 @@
+"stage","feature","shap_importance_pct","shap_icc"
+"raw pooled","current_ratio",33.1,0.957
+"raw pooled","icover",18.2,0.945
+"raw pooled","cf_margin",15.3,0.936
+"raw pooled","liquidity_ratio",10.7,0.956
+"raw pooled","roa_pbt",6.3,0.868
+"raw pooled","ebitda_margin",4.6,0.917
+"raw pooled","stock_turnover",4.4,0.95
+"raw pooled","rev_per_emp",3.9,0.959
+"raw pooled","wc_gap",3.6,0.912
+"within representation","current_ratio_wn",32.7,NA
+"within representation","icover_wn",15.5,NA
+"within representation","cf_margin_wn",11.5,NA
+"within representation","liquidity_ratio_wn",11,NA
+"within representation","roa_pbt_wn",8.1,NA
+"within representation","ebitda_margin_wn",8.1,NA
+"within representation","stock_turnover_wn",5.3,NA
+"within representation","wc_gap_wn",4.2,NA
+"within representation","rev_per_emp_wn",3.5,NA

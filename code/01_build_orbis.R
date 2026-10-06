@@ -1,23 +1,23 @@
 # 01 — Building the ORBIS firm-year panel (Idea 4: early-warning of distress)
 #
 # Replaces the country/life-expectancy application with a corporate one built on
-# Bureau van Dijk ORBIS (snapshot Dec-2025). Universe: EUROPEAN unconsolidated
+# Bureau van Dijk ORBIS (snapshot Dec-2025). Universe: European unconsolidated
 # accounts (EU-27 + EFTA/EEA + UK; consolidation code U*, 12-month fiscal years,
 # 2013-2022), EUR-denominated so countries are directly comparable. The firm
-# country (BvD ID prefix) enters as a time-invariant STRUCTURAL (between-only)
-# predictor — exactly the kind of level effect the between e2tree should isolate.
+# country (BvD ID prefix) enters as a time-invariant structural (between-only)
+# predictor, exactly the kind of level effect the between e2tree should isolate.
 #
-# TARGET (regression, high ICC — verified empirically):
+# Target (regression, high ICC, verified empirically):
 #   solvency_asset = Solvency ratio, asset-based (%) = shareholders' funds / total
 #   assets. The firm's capitalisation buffer: a structural, highly persistent
 #   level (who is well- vs under-capitalised) with genuine year-on-year drift.
-#   Measured ICC ~ 0.83 (> 0.8 threshold) on this panel — the regime in which a
+#   Measured ICC ~ 0.83 (> 0.8 threshold) on this panel, the regime in which a
 #   pooled SHAP/surrogate conflates between & within. (Interest cover, the other
-#   distress candidate, was rejected: its ICC is only ~0.35 — within-dominated.)
+#   distress candidate, was rejected: its ICC is only ~0.35, within-dominated.)
 #
-# PROVENANCE: the heavy ORBIS .txt files (tens of GB, on the external volume
-#   /Volumes/Crucial X6/Orbis Univ Dec_Work In Progress) are NOT shipped. They
-#   are pre-filtered to the European universe by code/00_extract_orbis.sh into
+# Provenance: the heavy ORBIS .txt files (tens of GB, held on a licensed local
+#   export pointed to by ORBIS_ROOT) are not shipped. They are pre-filtered to
+#   the European universe by code/00_extract_orbis.sh into
 #   data/raw/output/orbis_eu_*.tsv. This script reduces those extracts to a
 #   tractable, complete-case modelling panel and draws a reproducible firm sample
 #   (seed fixed) small enough for the e2tree O(N^2) proximity matrix downstream.
@@ -64,7 +64,7 @@ winsor <- function(x, p = WINS_P) {
 }
 
 # ---- model variables -------------------------------------------------------
-# TARGET = solvency ratio (equity/assets, %): high-ICC structural buffer.
+# Target = solvency ratio (equity/assets, %): high-ICC structural buffer.
 # gearing is dropped from predictors (debt/equity is the near-mechanical
 # complement of equity/assets); icover enters as a debt-service predictor.
 target <- "solvency_asset"
@@ -77,10 +77,10 @@ model_vars <- c(target, feats)
 # Two entry points:
 #  (a) FULL  : if the raw ORBIS extracts (data/raw/output/orbis_eu_*.tsv) are
 #              present, stream them and rebuild the pool from scratch.
-#  (b) FAST  : otherwise reload the shipped data/orbis_eu_pool.rds — the same
-#              balanced complete-case pool — so the analysis reproduces without
+#  (b) FAST  : otherwise reload the shipped data/orbis_eu_pool.rds, the same
+#              balanced complete-case pool, so the analysis reproduces without
 #              re-reading 22 GB (and without the licensed raw ORBIS files, which
-#              are NOT redistributable). Regenerate the .tsv with 00_extract_orbis.sh.
+#              are not redistributable). Regenerate the .tsv with 00_extract_orbis.sh.
 fin_tsv  <- file.path(SRC, "orbis_eu_financials.tsv")
 pool_rds <- file.path(DATA, "orbis_eu_pool.rds")
 
@@ -228,14 +228,12 @@ p_icc <- icc_tbl %>% mutate(variable = reorder(variable, ICC_pool)) %>%
   geom_col(fill = "#1b9e77", width = .7) +
   geom_hline(yintercept = 0.8, linetype = 2, color = "#d95f02") +
   coord_flip() + ylim(0, 1) + th +
-  labs(title = "Intraclass correlation by variable (European firm pool)",
-       subtitle = "dashed line = 0.8 necessity threshold for panel e2tree",
-       x = NULL, y = "ICC (between share of variance, full pool)")
+  labs(x = NULL, y = "ICC (between share of variance, full pool)")
 ggsave(file.path(PLT, "data_icc.png"), p_icc, width = 7, height = 5, dpi = 130)
 
 p_n <- md %>% count(year) %>%
   ggplot(aes(year, n)) + geom_col(fill = "#2c7fb8", width = .7) + th +
-  labs(title = "Firm-year observations by year", x = NULL, y = "n. firms")
+  labs(x = NULL, y = "n. firms")
 ggsave(file.path(PLT, "data_coverage.png"), p_n, width = 7, height = 4, dpi = 130)
 
 # ---- 14. firms per country ------------------------------------------------

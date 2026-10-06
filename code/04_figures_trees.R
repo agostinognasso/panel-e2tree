@@ -10,7 +10,7 @@ suppressPackageStartupMessages({library(e2tree); library(rpart.plot)})
 args <- commandArgs(trailingOnly = FALSE)
 script_path <- sub("^--file=", "", grep("^--file=", args, value = TRUE))
 ROOT <- if (length(script_path)) dirname(dirname(normalizePath(script_path))) else normalizePath("..")
-EN <- file.path(ROOT, "manuscript", "figures")
+EN <- file.path(ROOT, "manuscript", "manuscript_DSS_v2", "figures")
 dir.create(EN, recursive = TRUE, showWarnings = FALSE)
 S1 <- readRDS(file.path(ROOT, "output", "repro", "cache", "S1_main.rds"))
 
@@ -41,21 +41,21 @@ draw_tree <- function(comp, main, file, w, h, tweak,
   rp$frame$yval[abs(rp$frame$yval) < 1e-9] <- 0   # clean 0 for demeaned within
   if (is.finite(max_depth)) rp <- truncate_rpart(rp, max_depth)
   png(file.path(EN, file), width=w, height=h, res=150)
-  par(mar=c(0,0,mtop,0), xpd=NA)
+  par(mar=c(0,0,0.4,0), xpd=NA)          # no title: only a thin top margin
   rpart.plot::rpart.plot(
-    rp, type=2, extra=extra, box.palette="GnBu", branch=.3,
+    rp, type=2, extra=extra, box.palette=c("#F7F7F7","#E8E8E8","#D9D9D9","#C9C9C9","#BABABA"), branch=.3,
     fallen.leaves=TRUE, roundint=FALSE, tweak=tweak,
     split.cex=split.cex, faclen=0, varlen=0, gap=0, space=space,
-    shadow.col="grey85", main=main)
+    shadow.col=NULL, main=NULL)     # figure titles removed (kept in captions)
   dev.off()
 }
 
-# Between tree: firm means — what distinguishes structurally well- vs under-capitalised firms.
+# Between tree: firm means, what distinguishes structurally well- vs under-capitalised firms.
 draw_tree(S1$between,
           "Between tree: what distinguishes firms' structural solvency (firm means)",
           "e2tree_diagram.png", w=2600, h=1500, tweak=1.05)
 
-# Within tree: demeaned deviations — what moves a firm's solvency over time.
+# Within tree: demeaned deviations, what moves a firm's solvency over time.
 # Full tree: supplementary material (and the object all reported metrics use).
 draw_tree(S1$within,
           "Within tree: what moves solvency over time (within-firm deviations)",

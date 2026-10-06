@@ -1,6 +1,6 @@
 # numbers_to_tex.R — converts output/repro/paper_numbers.csv into LaTeX macros
-# (manuscript/numbers.tex) for the ORBIS solvency application. The paper
-# references ONLY these macros, so text and pipeline cannot drift apart.
+# (manuscript/manuscript_DSS_v2/numbers.tex) for the ORBIS solvency application. The paper
+# references only these macros, so text and pipeline cannot drift apart.
 # Run after code/03_panel_e2tree_orbis.R.
 
 args <- commandArgs(trailingOnly = FALSE)
@@ -78,4 +78,6 @@ for (i in seq_len(nrow(nums))) {
 missing <- setdiff(unname(map), sub("^\\\\newcommand\\{\\\\([A-Za-z]+)\\}.*$", "\\1",
                                     grep("newcommand", lines, value = TRUE)))
 if (length(missing)) warning("Macros without a pipeline value: ", paste(missing, collapse = ", "))
-writeLines(lines, file.path(BASE, "manuscript", "numbers.tex"))
+TEX <- file.path(BASE, "manuscript", "manuscript_DSS_v2", "numbers.tex")
+writeLines(lines, TEX)
+cat("written:", TEX, "\n")

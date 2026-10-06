@@ -1,0 +1,5 @@
+idea,between_top3,within_top3
+Idea1_ROA,"va_per_emp, stock_turnover, current_ratio","va_per_emp, labor_share, stock_turnover"
+Idea2_Leverage,"icover, liquidity_ratio, current_ratio","roa_pbt, icover, ln_assets"
+Idea3_Productivity,"ln_assets, labor_share, ebitda_margin","cf_margin, ebitda_margin, ln_assets"
+Idea4_Solvency,"current_ratio, liquidity_ratio, icover","current_ratio, liquidity_ratio, roa_pbt"
